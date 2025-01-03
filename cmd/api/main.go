@@ -27,7 +27,7 @@ func main() {
 	var cfg config
 	// configuration flags
 	flag.IntVar(&cfg.port, "port",5000,"API server port")
-	flag.StringVar(&cfg.env,"env","development","Environment(development|staging|production)")
+	flag.StringVar(&cfg.env,"env","developmrt","Environment(development|staging|production)")
 	flag.Parse()
 
 	// initialize new structured logger
