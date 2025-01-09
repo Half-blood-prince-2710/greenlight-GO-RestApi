@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/half-blood-prince-2710/greenlight-GO-RestApi/internal/data"
 	_ "github.com/lib/pq"
 )
 
@@ -26,6 +28,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
+	models data.Models
 }
 
 
@@ -55,6 +58,7 @@ func main() {
 	app:= &application{
 		config : cfg,
 		logger : logger,
+		models: data.NewModels(db),
 	}
 
 	

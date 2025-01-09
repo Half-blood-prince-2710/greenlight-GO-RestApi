@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -12,4 +13,24 @@ type Movie struct {
 	Runtime   int32     `json:"runtime,omitempty"` // Add the omitempty directive
 	Genres    []string  `json:"genres,omitempty"`  // Add the omitempty directive
 	Version   int32     `json:"version"`
+}
+
+type MovieModel struct {
+	DB *sql.DB
+}
+
+func (m *MovieModel) Insert(movie *Movie) error {
+	return nil
+}
+
+func (m *MovieModel) Get(id int64) (*Movie, error) {
+	return nil, nil
+}
+
+func (m *MovieModel) Update(movie *Movie) error {
+	return nil
+}
+
+func (m *MovieModel) Delete(id int64) error {
+	return nil
 }
