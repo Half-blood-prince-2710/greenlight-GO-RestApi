@@ -55,7 +55,17 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	
+	movie , err := app.models.Movies.Get(id)
+	if err!=nil{
+		switch {
+		case errors.Is(err,data.ErrRecordNotFound):
+			http.NotFound(w,r)
+		default:
+			app.serverErrorResponse(w,r,err)
+			
+		}
+		return
+	}
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
