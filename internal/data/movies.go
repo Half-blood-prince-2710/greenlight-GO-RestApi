@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -25,8 +26,9 @@ type MovieModel struct {
 func (m *MovieModel) Insert(movie *Movie) error {
 	query := `INSERT INTO movies (title,year,runtime,genres) VALUES ($1,$2,$3,$4) RETURNING id, created_at,version`
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
-
-	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
 func (m *MovieModel) Get(id int64) (*Movie, error) {
@@ -36,7 +38,11 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 
 	query := `SELECT id,created_at,title,year,runtime,genres,version FROM movies WHERE id=$1`
 	var movie Movie
-	err := m.DB.QueryRow(query, id).Scan(
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&movie.ID,
 		&movie.CreatedAt,
 		&movie.Title,
@@ -47,7 +53,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	)
 	if err != nil {
 		switch {
-		case errors.Is(err,sql.ErrNoRows):
+		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrRecordNotFound
 		default:
 			return nil, err
@@ -58,13 +64,15 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 
 func (m *MovieModel) Update(movie *Movie) error {
 
-	query :=  ` UPDATE movies SET title=$1 , year=$2, runtime=$3, genres=$4 , version=version +1 
+	query := ` UPDATE movies SET title=$1 , year=$2, runtime=$3, genres=$4 , version=version +1 
 	WHERE id =$5 AND version=$6
 	RETURNING version`
-	args := []any{movie.Title,movie.Year,movie.Runtime, pq.Array(movie.Genres),movie.ID,movie.Version}
-	err:=m.DB.QueryRow(query,args...).Scan(&movie.Version)
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID, movie.Version}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.Version)
 	if err != nil {
-		switch{
+		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrEditConflict
 		default:
@@ -75,19 +83,21 @@ func (m *MovieModel) Update(movie *Movie) error {
 }
 
 func (m *MovieModel) Delete(id int64) error {
-	if id<1 {
+	if id < 1 {
 		return ErrRecordNotFound
 	}
-	query:= `DELETE FROM movies WHERE id=$1`
-	result , err := m.DB.Exec(query,id)
-	if err!=nil {
+	query := `DELETE FROM movies WHERE id=$1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	result, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
 		return err
 	}
-	rowsAffected , err := result.RowsAffected()
-	if err!=nil{
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
 		return nil
 	}
-	if rowsAffected==0 {
+	if rowsAffected == 0 {
 		return ErrRecordNotFound
 	}
 	return nil
