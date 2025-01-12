@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/half-blood-prince-2710/greenlight-GO-RestApi/internal/data"
 )
 
@@ -132,5 +133,52 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+	// Delete the movie from the database, sending a 404 Not Found response to the
+	// client if there isn't a matching record.
+	err = app.models.Movies.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// Return a 200 OK status code along with a success message.
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "movie successfully deleted"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
 
+func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		Title    string
+		Genres   []string
+		data.Filters
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Genres = app.readCSV(qs, "genres", []string{})
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Sort = app.readString(qs, "sort", "id")
+
+	// if !v.Valid() {
+	// 	app.failedValidationResponse(w, r, v.Errors)
+	// 	return
+	// }
+
+fmt.Printf(w,"%+v\n",input)
 }
