@@ -105,7 +105,7 @@ func (m *MovieModel) Delete(id int64) error {
 
 func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie,error){
 	query:= `SELECT id, created_at,title,year,runtime,genres , version FROM movies 
-			WHERE (LOWER(title)=LOWER($1) OR $1='') AND (genres @> $2 OR $2='{}') ORDER BY ID`
+			WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')AND (genres @> $2 OR $2='{}') ORDER BY ID`
 	ctx,cancel := context.WithTimeout(context.Background(),3*time.Second)
 	defer cancel()
 
@@ -118,7 +118,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 	movies := []*Movie{}
 	
 	for rows.Next() {
-		var movie Movie
+		var movie *Movie
 		err:=rows.Scan( &movie.ID,
 						&movie.CreatedAt,
 						&movie.Title,
@@ -128,8 +128,9 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 						&movie.Version,
 					)
 		if err!= nil{
-			return nil,
+			return nil,err
 		}
+		
 		movies = append(movies,movie)
 	}
 

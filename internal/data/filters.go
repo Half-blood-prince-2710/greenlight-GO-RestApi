@@ -1,5 +1,7 @@
 package data
 
+import "github.com/go-playground/validator/v10"
+
 type Filters struct {
 	Page int
 	PageSize int
