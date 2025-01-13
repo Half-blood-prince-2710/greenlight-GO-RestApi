@@ -14,6 +14,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+
+// SIGINT Interrupt from keyboard Ctrl+C Yes
+// SIGQUIT Quit from keyboard Ctrl+\ Yes
+// SIGKILL Kill process (terminate immediately) - No
+// SIGTERM Terminate process in orderly manner - Yes
 const version = "1.0.0"
 
 type config struct {
