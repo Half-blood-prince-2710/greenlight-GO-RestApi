@@ -180,14 +180,14 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 	// 	app.failedValidationResponse(w, r, v.Errors)
 	// 	return
 	// }
-
-	movies, err := app.models.Movies.GetAll()
+	r.ParseForm()
+	movies,metadata, err := app.models.Movies.GetAll()
 	if err !=nil{
 		app.serverErrorResponse(w,r,err)
 
 	}
 
-	err =app.writeJSON(w,http.StatusOK,envelope{"movies":movies},nil)
+	err =app.writeJSON(w,http.StatusOK,envelope{"movies":movies, "metdata":metadata},nil)
 	if err!=nil{
 		app.serverErrorResponse(w,r,err)
 	}
