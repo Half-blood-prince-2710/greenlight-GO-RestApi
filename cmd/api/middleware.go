@@ -28,7 +28,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 
 func (app *application) rateLimit(next http.Handler) http.Handler {
 	type client struct {
-		limiter *rate.Limiter
+		limiter  *rate.Limiter
 		lastSeen time.Time
 	}
 	var (
@@ -37,12 +37,12 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	)
 
 	go func() {
-		for{
+		for {
 			time.Sleep(time.Minute)
 			mu.Lock()
-			for ip,client := range clients{
-				if time.Since(client.lastSeen)> 5*time.Minute{
-					delete(clients,ip)
+			for ip, client := range clients {
+				if time.Since(client.lastSeen) > 5*time.Minute {
+					delete(clients, ip)
 				}
 			}
 
@@ -51,24 +51,27 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-			return
-		}
 
-		mu.Lock()
-		if _, found := clients[ip]; !found {
-			clients[ip] = &client{limiter :rate.NewLimiter(2, 4)}
-		}
-		clients[ip].lastSeen =  time.Now()
-		if !clients[ip].limiter.Allow() {
+		if app.config.limiter.enabled {
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				app.serverErrorResponse(w, r, err)
+				return
+			}
+
+			mu.Lock()
+			if _, found := clients[ip]; !found {
+				clients[ip] = &client{limiter: rate.NewLimiter(2, 4)}
+			}
+			clients[ip].lastSeen = time.Now()
+			if !clients[ip].limiter.Allow() {
+				mu.Unlock()
+				app.rateLimitExceededResponse(w, r)
+				return
+			}
+
 			mu.Unlock()
-			app.rateLimitExceededResponse(w, r)
-			return
 		}
-
-		mu.Unlock()
 		next.ServeHTTP(w, r)
 	})
 }
