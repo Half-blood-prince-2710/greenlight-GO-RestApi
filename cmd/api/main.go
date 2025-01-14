@@ -4,17 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	
+
 	"log/slog"
-	
+
 	"os"
 	"time"
 
 	"github.com/half-blood-prince-2710/greenlight-GO-RestApi/internal/data"
+	"github.com/half-blood-prince-2710/greenlight-GO-RestApi/internal/mailer"
 	_ "github.com/lib/pq"
 )
 
-//smtp
+// smtp
 // SIGINT Interrupt from keyboard Ctrl+C Yes
 // SIGQUIT Quit from keyboard Ctrl+\ Yes
 // SIGKILL Kill process (terminate immediately) - No
@@ -35,14 +36,39 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *slog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
+Host
+
+sandbox.smtp.mailtrap.io
+Port
+
+25, 465, 587 or 2525
+Username
+
+c438053571b482
+Password
+ef45d984a119a6
+Auth
+
+PLAIN, LOGIN and CRAM-MD5
+TLS
+
+Optional (STARTTLS on all ports)
 func main() {
 	var cfg config
 	// configuration flags
@@ -57,6 +83,12 @@ func main() {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv(SMTP_USERNAME), "SMTP username")
+flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv(SMTP_PASSWORD), "SMTP password")
+flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.alexedwards.net>", "SMTP sender")
 	flag.Parse()
 
 	// initialize new structured logger
@@ -76,9 +108,10 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
-	err= app.serve()
+	err = app.serve()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

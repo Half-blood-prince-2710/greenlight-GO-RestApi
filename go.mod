@@ -6,6 +6,7 @@ require github.com/julienschmidt/httprouter v1.3.0
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/go-mail/mail/v2 v2.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.23.0 // indirect
@@ -16,4 +17,5 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
