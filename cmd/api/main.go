@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"sync"
 
 	"log/slog"
 
@@ -50,25 +51,10 @@ type application struct {
 	logger *slog.Logger
 	models data.Models
 	mailer mailer.Mailer
+	wg sync.WaitGroup
 }
 
-Host
 
-sandbox.smtp.mailtrap.io
-Port
-
-25, 465, 587 or 2525
-Username
-
-c438053571b482
-Password
-ef45d984a119a6
-Auth
-
-PLAIN, LOGIN and CRAM-MD5
-TLS
-
-Optional (STARTTLS on all ports)
 func main() {
 	var cfg config
 	// configuration flags
