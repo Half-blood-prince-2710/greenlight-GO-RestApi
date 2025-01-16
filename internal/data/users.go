@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 )
-
+// stateful token authentication
 var (
 	ErrDuplicateEmail = errors.New("dupliacte email")
 )
