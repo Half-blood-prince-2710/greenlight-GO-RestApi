@@ -29,3 +29,4 @@ func (app *application) routes() http.Handler {
 	return app.recoverPanic(app.rateLimit(app.authenticate(mux)))
 	
 }
+
