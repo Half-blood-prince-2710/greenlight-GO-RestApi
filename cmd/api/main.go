@@ -16,8 +16,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// smtp
-//cors 
 // SIGINT Interrupt from keyboard Ctrl+C Yes
 // SIGQUIT Quit from keyboard Ctrl+\ Yes
 // SIGKILL Kill process (terminate immediately) - No
