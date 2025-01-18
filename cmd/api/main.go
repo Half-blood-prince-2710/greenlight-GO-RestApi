@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"strings"
 	"sync"
 
 	"log/slog"
@@ -43,6 +44,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		trustedOrigins []string
+	}
 }
 
 type application struct {
@@ -50,9 +54,8 @@ type application struct {
 	logger *slog.Logger
 	models data.Models
 	mailer mailer.Mailer
-	wg sync.WaitGroup
+	wg     sync.WaitGroup
 }
-
 
 func main() {
 	var cfg config
@@ -70,10 +73,14 @@ func main() {
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
-flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv(SMTP_USERNAME), "SMTP username")
-flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv(SMTP_PASSWORD), "SMTP password")
-flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.alexedwards.net>", "SMTP sender")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv(SMTP_USERNAME), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv(SMTP_PASSWORD), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.alexedwards.net>", "SMTP sender")
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
 	flag.Parse()
 
 	// initialize new structured logger
